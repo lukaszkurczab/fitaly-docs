@@ -1,64 +1,74 @@
-# Decyzje Techniczne I Guardraile
+# Decyzje techniczne i guardraile
 
 Status: aktywny dokument kanoniczny
-Data aktualizacji: 2026-06-12
+Data aktualizacji: 2026-06-25
 
-Ten plik zastapil historyczny katalog `docs/adr/`. Nie jest dziennikiem
-wszystkich dawnych decyzji. Jest krotkim zestawem aktywnych decyzji, ktore
-czlowiek i asystent AI powinni sprawdzic przed zmiana architektury, flow albo
-kontraktu.
+Ten plik zawiera tylko aktywne decyzje wpływające na pracę nad Fitaly. Repo,
+kod, manifesty, testy i runbooki pozostają źródłem prawdy. Przy konflikcie
+najpierw zweryfikuj repo evidence, potem popraw dokumentację.
 
-Repo, kod, manifesty, testy i runbooki pozostaja zrodlem prawdy. Jesli ten
-plik konfliktuje z aktualnym kodem albo nowszym core-flow doc, zatrzymaj sie i
-zweryfikuj repo evidence przed edycja.
+## Pre-launch posture
 
-## Pre-launch Posture
-
-- Fitaly jest pre-launch / release-hardening, dopoki release owner nie zamknie
-  osobnego release acceptance.
-- Legacy paths, duplicate snapshots, old endpoint behavior i hidden fallbacks sa
+- Fitaly jest pre-launch / release-hardening do podpisania `CORE_RC_READY`.
+- Aktywny zakres to release 1.0 opisany w
+  [Launch Scope](../launch/00-release-scope.md).
+- Rozwój 1.1 jest zawieszony do launchu.
+- Legacy paths, duplicate snapshots, stare endpointy i ukryte fallbacki są
   removal scope, nie compatibility promise.
-- Kill switche sa dozwolone tylko dla powierzchni wysokiego ryzyka: AI,
-  reminders, weekly/coach, payments, provider-cost surfaces i kontrolowane
-  eksperymenty.
-- Disabled/degraded state musi byc jawny. Kill switch nie moze wracac do starej
-  architektury po cichu.
+- Kill switche są dozwolone dla AI, reminders, reports/coach, payments,
+  provider-cost surfaces i kontrolowanych eksperymentów.
+- Disabled/degraded state musi być jawny. Kill switch nie może przywracać
+  starego zachowania ani wykonywać pracy w tle.
 
-Smart Memory implementation pass jest zamkniety. Kolejne prace traktuj jako
-bugfixy, hardening albo nowe male iteracje z wlasnymi acceptance criteria.
-Krotki status zamkniecia jest w
-[Smart Memory implementation closure](../planning/smart-memory-core-release-acceptance-packet.md).
+## Launch scope freeze i 1.1
 
-## Mobile Architecture
+W produkcji pozostają wyłączone:
 
-### Feature-first Jest Domyslem
+- Food Library;
+- Smart Memory capture/apply/UI;
+- Known Patterns;
+- Recipe Catalog;
+- Planning;
+- Home Next Action;
+- Review Memory Explanation.
 
-Nowe mobile functionality trafia domyslnie do `fitaly/src/feature/*`.
-Feature jest prywatny domyslnie: nie importuj prywatnych modulow jednego
-feature z innego feature. Jesli UI, hook albo service jest realnie wspolny dla
-co najmniej dwoch feature, wyciagnij go do warstwy globalnej:
-`components`, `hooks`, `services`, `utils`, `theme`, `navigation` albo `types`.
+Zmiana któregokolwiek z tych flag na `true` wymaga nowej decyzji scope i
+osobnego feature rollout gate. Nie wykonuj takiej zmiany jako efektu ubocznego
+launch hardeningu.
 
-Kanoniczny opis: [frontend architecture](./frontend.md).
+## Evidence policy
 
-### React Context Zamiast Centralnego Store
+- Każdy release artifact musi wskazywać FE SHA, BE SHA, platformę, build/runtime
+  profile, backend target, czas i wynik.
+- Wynik testu na wcześniejszym SHA nie zamyka gate'u dla aktualnego kandydata.
+- Lokalny simulator/emulator, remote CI, smoke deployment i store build są
+  osobnymi warstwami dowodu.
+- `pass_with_gaps` nie może ukrywać P0. Waiver dotyczy wyłącznie jawnego P1 z
+  ownerem i planem po release.
+- Raw tokeny, payloady, prompty, zdjęcia i dane użytkownika nie mogą trafiać do
+  evidence.
 
-Domyslny model stanu to domenowe React Context providers i typed hooks. Nie
+## Mobile architecture
+
+### Feature-first
+
+Nowe mobile functionality trafia domyślnie do `fitaly/src/feature/*`. Feature
+jest prywatny domyślnie. Kod współdzielony przenoś do globalnych warstw dopiero,
+gdy ma rzeczywiste użycie między domenami.
+
+### React Context zamiast centralnego store
+
+Domyślny model stanu to domenowe React Context providers i typed hooks. Nie
 dodawaj Redux-style centralnego store bez nowej, repo-potwierdzonej decyzji.
-Optymalizuj provider values i selektory, gdy domena zaczyna powodowac zbedne
-rerendery.
 
-Kanoniczny opis: [frontend architecture](./frontend.md).
+## Meal i offline-first
 
-## Meal I Offline-first
+### Local-first read model
 
-### Local-first Read Model
+Home, History i Statistics reagują na save/edit/delete przez lokalny read model,
+nie przez backend refetch wymagany do natychmiastowej spójności UI.
 
-Zalogowane posilki sa lokal-first. Home, History i Statistics maja reagowac na
-save/edit/delete przez lokalny read model i shared selectors, nie przez backend
-refetch wymagany do natychmiastowej spojnosci UI.
-
-Kanoniczny zapis posilku:
+Kanoniczny zapis:
 
 ```text
 ReviewMealScreen
@@ -68,78 +78,55 @@ ReviewMealScreen
   -> enqueueUpsert
 ```
 
-Przed zmiana tego flow potwierdz aktualny stan w repo mobile: `ReviewMeal`,
-meal services, offline queue/repository, local read model, tests i E2E flows.
+Każda zmiana wymaga przeglądu Review, meal services, offline queue/repository,
+local read model, testów i E2E.
 
-### Konflikty Sa Jawne
+### Konflikty są jawne
 
-Historyczna decyzja "last-write-wins" nie jest juz aktywnym uproszczeniem dla
-release-critical sync. Operacje sync musza ujawniac `pending`, `failed`,
-`dead-letter`, `retry` i konflikt/review tam, gdzie merge jest niejednoznaczny.
-Nie ukrywaj konfliktu przez cichy backend overwrite albo timestamp fallback.
+Sync musi ujawniać `pending`, `failed`, `dead-letter`, `retry` i konflikt tam,
+gdzie merge jest niejednoznaczny. Nie ukrywaj konfliktu przez silent overwrite
+lub timestamp fallback.
 
-Nie przywracaj starych controller planow jako aktywnego backlogu. Jesli konflikt
-sync wraca jako bug, zdefiniuj nowy maly zakres i test reprodukujacy problem.
+## Backend architecture
 
-## Backend Architecture
+### Cienki HTTP layer
 
-### Cienki HTTP Layer
-
-Backend FastAPI trzyma route handlers cienkie: walidacja, wywolanie serwisu,
-mapowanie odpowiedzi. Logika biznesowa nalezy do `app/services`, `app/domain`,
-`app/infra`, `app/db` albo typowanych schema/model layers.
-
-Kanoniczny opis: [backend architecture](./backend.md).
+FastAPI route handlers odpowiadają za walidację, wywołanie serwisu i mapowanie
+odpowiedzi. Logika biznesowa należy do `app/services`, `app/domain`, `app/infra`,
+`app/db` albo typowanych schema/model layers.
 
 ### Backend-owned AI
 
-Mobile nigdy nie wykonuje bezposrednich OpenAI requests i nie nosi provider
-secrets. AI provider access, prompt/context construction, rate/cost/credits
-enforcement i provider error mapping sa backend-owned.
+Mobile nie wykonuje bezpośrednich OpenAI requests i nie przechowuje provider
+secrets. Provider access, prompt/context, credits, cost/rate enforcement i error
+mapping są backend-owned.
 
-Aktywne powierzchnie:
+Aktywne launchowe powierzchnie:
 
-- Add Meal photo/text analysis: backend v1 `/api/v1/ai/*`.
-- AI Chat: backend v2 `POST /api/v2/ai/chat/runs` plus read projections under
-  `/api/v2/users/me/chat/*`.
+- Add Meal photo/text analysis: backend v1 `/api/v1/ai/*`;
+- AI Chat: `POST /api/v2/ai/chat/runs` i read projections v2.
 
-Nie przywracaj ogolnej decyzji, ze wszystkie AI paths sa pod `/api/v1/ai/*`.
-To jest stary opis. Wersja v2 jest kanoniczna dla AI Chat.
+Nie przywracaj legacy chat v1 fallbacku.
 
-Kanoniczne opisy zaczynaja sie od [backend architecture](./backend.md), ale
-konkretny runtime zawsze potwierdzaj w aktualnym backend/mobile kodzie,
-fixture'ach i testach.
+## Cross-repo contracts
 
-## Cross-repo Contracts
+Zmiana chronionego contractu wymaga parzystej aktualizacji mobile/backend i
+testów alignment. Dotyczy co najmniej:
 
-Mobile i backend ewoluuja w osobnych repozytoriach, ale wybrane fixtures,
-enumy i response shapes sa kontraktami cross-repo. Zmiana chronionego
-kontraktu wymaga parzystej aktualizacji obu repo i testow alignment.
+- meal schema i enumów;
+- NutritionState shape;
+- AI gateway reject reasons;
+- habit signal enums;
+- AI response i credit-cost fields;
+- fixtures mobile/backend.
 
-Minimalna zasada:
-
-- chronione powierzchnie obejmuja co najmniej:
-  - meal schema fields i enum values: `MealType`, `MealSyncState`,
-    `MealInputMethod`, `MealSource`,
-  - `NutritionState` response/type shape,
-  - AI gateway reject reasons,
-  - habit signal enums,
-  - AI response shape i credit-cost fields,
-- mobile fixtures: `fitaly/src/__contract_fixtures__/*.json`
-- backend fixtures: `fitaly-backend/tests/contract_fixtures/*.json`
-- mobile alignment tests: `contractAlignment`
-- backend alignment tests: `tests/test_contract_alignment.py`
-
-Nie zakladaj, ze contract testing chroni cale API. Chroni tylko zakres
-pokryty fixtures, sync scripts i testami.
+Contract tests chronią tylko jawnie wskazany zakres, nie całe API.
 
 Kanoniczny runbook: [E2E i testing](../runbooks/e2e-testing.md).
 
-## Update Rules
+## Update rules
 
-- Aktualizuj ten plik tylko dla decyzji, ktore maja aktywny skutek dla pracy
-  nad aplikacja.
-- Szczegoly flow trzymamy w core-flow docs; ten plik ma byc szybkim indeksem.
-- Nie przenos tu starych ADR jako historii. Jesli decyzja jest martwa, usun ja
-  albo opisz jako retired tylko wtedy, gdy nadal chroni przed blednym ruchem.
-- Przy konflikcie miedzy docs a repo: repo wygrywa, a docs trzeba poprawic.
+- Ten plik nie jest historią ADR.
+- Martwe decyzje usuń, chyba że krótka nota aktywnie chroni przed błędem.
+- Szczegóły flow trzymaj w repo i runbookach.
+- Przy konflikcie repo wygrywa, a dokumentację trzeba poprawić.

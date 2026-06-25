@@ -1,20 +1,20 @@
 # Planning
 
-Status: closed for Smart Memory implementation
-Last updated: 2026-06-19
+Status: brak aktywnych planów 1.1
+Last updated: 2026-06-25
 
-This directory no longer contains active Smart Memory implementation plans.
-Plans `00-09`, handoff files, and packaging evidence reports were removed after
-the implementation closed.
+Historyczne plany Smart Memory i pakiet Launch Hardening CWQ zostały usunięte z
+aktywnej dokumentacji. Nie należy ich odtwarzać jako backlogu.
 
-Retained summary:
+Aktualna praca:
 
-- [Smart Memory Implementation Closure](./smart-memory-core-release-acceptance-packet.md)
+- [Launch 1.0](../launch/README.md)
+- [Kolejka pracy release](../launch/11-work-queue.md)
 
-Active fresh working package:
+Rozwój 1.1 pozostaje zawieszony zgodnie z
+[notą zawieszenia](../archive/2026-06-1-1-suspended.md).
 
-- [Launch Hardening CWQ workspace](./launch-hardening-cwq/)
+Nowe prace planistyczne mogą powstać dopiero:
 
-Future work should start from the current mobile/backend repos and be scoped as
-bugfixes, hardening, or fresh product iterations with their own acceptance
-criteria. Do not treat the removed controller plans as active backlog.
+1. jako mały, repo-potwierdzony fix wymagany przez launch; albo
+2. po wydaniu 1.0 i jawnej decyzji o wznowieniu 1.1.

@@ -1,33 +1,34 @@
 # Dokumentacja Fitaly
 
 Status: aktywny indeks dokumentacji workspace
-Last updated: 2026-06-19
+Last updated: 2026-06-25
 
-Ten katalog jest kanonicznym indeksem dokumentacji workspace Fitaly. Repozytoria
-`fitaly/` i `fitaly-backend/` pozostaja zrodlami prawdy dla implementacji;
-dokumentacja ma pomagac szybko znalezc aktualne kontrakty, runbooki i
-guardraile bez dublowania kodu.
+Repozytoria `fitaly/` i `fitaly-backend/` pozostają źródłami prawdy dla
+implementacji. Dokumentacja opisuje aktywne decyzje, kontrakty, runbooki i
+release evidence; nie może zastępować inspekcji aktualnego kodu, testów,
+manifestów i branchy.
 
-## Aktualny Stan
+## Aktualny priorytet
 
-- Workspace sklada sie z mobilnej aplikacji Expo/React Native w `fitaly/` oraz
-  backendu FastAPI w `fitaly-backend/`.
-- Root workspace nie jest git repo.
-- Projekt pozostaje pre-launch / release-hardening, dopoki release owner nie
-  zamknie osobnego release acceptance.
-- Smart Memory implementation pass `00-09` jest zakonczony. Kolejne prace wokol
-  Smart Memory traktuj jako bugfixy, hardening albo nowe male iteracje, nie jako
-  kontynuacje starych planow.
-- Mobile uzywa lokalnego, offline-first read modelu dla posilkow. Backend jest
-  trwalym zapisem i wlascicielem wybranych kontraktow, ale Home/History/Stats
-  nie czekaja na backend refetch dla natychmiastowej spojnosci UI.
-- AI, credits, weekly reports, smart reminders, telemetry i kosztowne backend
-  surfaces maja jawne kill switche. Kill switch nie moze wracac do starej
-  architektury po cichu.
+Fitaly jest w trybie **Launch 1.0 Release Hardening**.
 
-## Szybki Pakiet Dla Czlowieka I AI
+- aktywny zakres obejmuje wyłącznie core release 1.0;
+- Smart Memory, Food Library production autocomplete, Recipe Catalog, Planning,
+  Known Patterns, Home Next Action i Review Memory Explanation są zawieszone do
+  czasu launchu;
+- domeny 1.1 mogą pozostać w kodzie tylko za bezpiecznymi flagami `false` w
+  produkcji;
+- projekt nie jest release-ready, dopóki release owner nie zamknie wszystkich
+  wymaganych gate'ów i nie podpisze decyzji `CORE_RC_READY`.
 
-Przy nowej pracy zacznij od tych plikow:
+Aktywny punkt wejścia:
+
+- [Launch 1.0](./launch/README.md)
+- [Aktualny status release](./launch/01-current-release-status.md)
+- [Release readiness gates](./launch/02-release-readiness-gates.md)
+- [Kolejka pracy](./launch/11-work-queue.md)
+
+## Szybki pakiet orientacyjny
 
 - [Kierunek rozwoju aplikacji](./app-development.md)
 - [Decyzje techniczne i guardraile](./architecture/decisions.md)
@@ -38,52 +39,25 @@ Przy nowej pracy zacznij od tych plikow:
 - [E2E/testing runbook](./runbooks/e2e-testing.md)
 - [Runtime config](./runbooks/runtime-config.md)
 - [Launch runbook](./runbooks/launch.md)
-- [Smart Memory implementation closure](./planning/smart-memory-core-release-acceptance-packet.md)
-- [Launch Hardening CWQ workspace](./planning/launch-hardening-cwq/)
-- [Post Release Intelligence](./Fitaly_Post_Release_Intelligence.md)
+- [Nota zawieszenia 1.1](./archive/2026-06-1-1-suspended.md)
+
+## Zasady pracy z dokumentacją
+
+- Najpierw sprawdź aktualny branch, SHA, kod, manifesty, README, AGENTS, skrypty
+  i testy.
+- Nie przenoś statusu z wcześniejszego SHA na aktualny release candidate.
+- `implemented`, `locally verified`, `remote CI green`, `production verified` i
+  `release-approved` to różne stany.
+- Artefakt bez dokładnego FE SHA, BE SHA, platformy, profilu runtime i daty nie
+  jest release evidence.
+- Mock, emulator i provider-fake nie zastępują zaplanowanego smoke na realnej
+  integracji; realny smoke nie zastępuje testów deterministycznych.
+- Disabled/degraded state musi być jawny. Kill switch nie może wracać do starej
+  architektury po cichu.
+- Historycznych planów Smart Memory nie traktuj jako aktywnego backlogu.
+- W razie konfliktu repo wygrywa, a dokumentację trzeba poprawić.
 
 ## Planning
 
-Aktywne plany implementacyjne Smart Memory zostaly usuniete po zamknieciu prac.
-Zachowany zostal tylko krotki status zamkniecia:
-
-- [Smart Memory Implementation Closure](./planning/smart-memory-core-release-acceptance-packet.md)
-
-Aktywny swiezy pakiet roboczy:
-
-- [Launch Hardening CWQ workspace](./planning/launch-hardening-cwq/)
-
-Nowe prace powinny powstawac z aktualnego repo evidence i miec osobne acceptance
-criteria. Nie traktuj starych planow `00-09` jako backlogu.
-
-## Zasady Pracy Z Dokumentacja
-
-- Najpierw sprawdz kod, manifesty, README, AGENTS, skrypty i testy.
-  Dokumentacja nie moze zgadywac.
-- Krotkie pliki tematyczne sa preferowane nad monolitycznymi raportami.
-- Nie dokumentujemy legacy fallbackow jako aktywnego zachowania.
-- Jesli twierdzenie nie jest potwierdzone w kodzie, oznacz je jako
-  niepotwierdzone albo pomin.
-- Nie zakladaj istnienia `fitaly/docs/**` jako aktywnego zrodla.
-- Wizualne evidence i artefakty projektowe najpierw potwierdzaj z repo, np. z
-  aktualnych `e2e/artifacts`, screenshotow albo plikow wskazanych przez aktywny
-  task.
-
-## Aktywne Decyzje Architektoniczne
-
-Historyczny katalog `docs/adr/` zostal zastapiony przez
-[decyzje techniczne i guardraile](./architecture/decisions.md). Ten plik
-zawiera tylko aktywne decyzje. Stare ADR-y nie sa juz osobnym zrodlem prawdy.
-
-## Usuniete Kategorie Dokumentow
-
-Nie trzymamy tu:
-
-- historycznych Smart Memory controller planow `00-09`,
-- jednorazowych Smart Memory handoffow i diff-auditow po zamknieciu etapu,
-- generycznych raportow opartych na przykladach spoza Fitaly,
-- dated readiness notes po przeniesieniu aktualnych checkow do runbookow,
-- archiwalnych rollout notes,
-- monolitycznych release-hardening archives po przeniesieniu aktualnych
-  wnioskow do aktualnych plikow tematycznych,
-- `.DS_Store` i innych lokalnych artefaktow systemowych.
+Katalog `planning/` nie zawiera aktywnego planu produktowego. Aktywna praca
+release jest śledzona wyłącznie w `launch/`.
