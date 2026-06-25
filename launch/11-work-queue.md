@@ -8,19 +8,22 @@ evidence. Nie rozwijaj 1.1.
 
 ## P0 — kolejność rekomendowana
 
-### L0 — Dokumentacja i scope freeze
+### L0 — Documentation reconciliation v2
 
-- zastosować migration package;
-- usunąć stare plany;
-- potwierdzić production-off policy;
-- acceptance: brak aktywnych linków do starych dokumentów.
+- zastosować pełne pliki zastępcze z paczki;
+- usunąć martwe aktywne linki wykryte w audycie migracji;
+- ustawić `e2e:core-release-gate` jako jedyny kanoniczny core runtime gate;
+- potwierdzić jawną macierz scope i globalny status `NO_GO`;
+- uruchomić grep/link review oraz `git diff --check`;
+- acceptance: brak aktywnych referencji do wycofanych dokumentów.
 
 ### L1 — Aktualny baseline
 
-- fetch/prune obu repo;
+- `git fetch --prune` obu repo;
 - branch, SHA, status, diff-to-origin;
 - dependency/runtime versions;
-- zapisać candidate id;
+- wybrać i zapisać `candidateId`;
+- odświeżyć `01-current-release-status.md`;
 - acceptance: clean exact pair.
 
 ### L2 — Exact-pair CI
@@ -30,34 +33,50 @@ evidence. Nie rozwijaj 1.1.
 - zamknąć drift kontraktów;
 - acceptance: oba green dla tej samej pary.
 
-### L3 — Artifact harness i screen inventory
+### L3 — Artifact harness identity
 
-- ustalić wymagane screenshot checkpoints;
-- wygenerować run manifest automatycznie lub powtarzalnie;
-- uruchomić visual-audit/targeted suites;
-- acceptance: kompletna biblioteka i lista braków.
+- rozszerzyć `manifest.json` albo dodać companion `review-manifest.md`;
+- zapisać FE SHA, BE SHA, platformę, profile, backend target, locale i flags;
+- zweryfikować expected screenshots oraz report collection;
+- acceptance: raw bundle jest jednoznacznie przypisany do RC.
 
-### L4 — iOS current-candidate core runtime
+### L4 — Screen inventory i visual audit generation
 
-- pełny core release gate;
-- accepted screenshots/JUnit/logs;
-- acceptance: single green suite dla aktualnej pary.
+- uruchomić `npm run e2e:visual-audit` dla iOS;
+- uruchomić visual audit dla Androida po gotowym AVD;
+- uruchomić targeted suites dla brakujących stanów;
+- acceptance: kompletna lista ekranów i braków względem frozen scope.
 
-### L5 — Android runner i runtime
+### L5 — iOS current-candidate core runtime
 
-- skonfigurować AVD;
+```bash
+cd fitaly
+npm run e2e:core-release-gate
+```
+
+- accepted screenshots/reports/logs;
+- acceptance: jedna green suite dla aktualnej pary i launch-like config.
+
+### L6 — Android runner i runtime
+
+```bash
+cd fitaly
+npm run e2e:android-simulator:preflight
+```
+
+- skonfigurować i uruchomić AVD;
 - przejść fail-closed preflight;
-- uruchomić core oraz platform layout/billing/permissions;
+- uruchomić `core-release-gate` oraz platform layout/billing/permissions;
 - acceptance: current-candidate Android evidence.
 
-### L6 — UI/UX audit i repair loop
+### L7 — UI/UX audit i repair loop
 
-- audyt całej biblioteki;
+- audyt całej biblioteki PL/EN i obu platform;
 - naprawa P0/P1;
-- targeted re-runs;
+- targeted re-runs i nowe screenshoty;
 - acceptance: visual gate passed.
 
-### L7 — Security/privacy/export/delete
+### L8 — Security/privacy/export/delete
 
 - auth/rules/cross-user negative tests;
 - PII audit telemetry/Sentry/logs;
@@ -65,23 +84,25 @@ evidence. Nie rozwijaj 1.1.
 - legal/store disclosures;
 - acceptance: security gate passed.
 
-### L8 — Billing/premium
+### L9 — Billing/premium
 
-- config/offerings/products;
-- iOS sandbox purchase/restore;
-- Android sandbox purchase/restore;
-- entitlement/free/premium/degraded;
-- acceptance: billing gate passed.
+- config/offerings/products/entitlement;
+- deterministic tests;
+- realny iOS sandbox purchase/restore;
+- realny Android sandbox purchase/restore;
+- restart/login/offline/degraded consistency;
+- acceptance: billing gate passed na obu platformach.
 
-### L9 — Smoke/deployed backend
+### L10 — Smoke/deployed backend
 
 - deployed SHA;
 - health/version/contracts;
-- bounded provider smoke;
+- bounded OpenAI smoke: 1 Chat + 1 Add Meal call max;
+- backend RevenueCat boundary;
 - disabled 1.1 behavior;
 - acceptance: backend smoke gate passed.
 
-### L10 — Backup/restore i rollback
+### L11 — Backup/restore i rollback
 
 - backup;
 - restore drill;
@@ -89,19 +110,19 @@ evidence. Nie rozwijaj 1.1.
 - feature/config kill switches;
 - acceptance: operational recovery evidence.
 
-### L11 — Store candidate
+### L12 — Store candidate
 
 - production builds;
 - TestFlight/internal Play install/update sanity;
 - metadata/privacy/subscription review;
 - acceptance: store gate passed.
 
-### L12 — Final RC decision
+### L13 — Final RC decision
 
 - odświeżyć current status;
-- zebrać final evidence;
+- zebrać final evidence dla jednej pary SHA;
 - independent review;
-- podpisać decyzję.
+- podpisać dokładnie jedną decyzję.
 
 ## P1 przed release, jeśli czas pozwala
 

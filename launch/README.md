@@ -17,7 +17,31 @@ NO_GO
 BLOCKED_EXTERNAL_DEPENDENCY
 ```
 
-`FULL_1_1_RC_READY` nie jest aktywnym celem.
+`FULL_1_1_RC_READY` nie jest aktywnym celem. Globalny status może mieć tylko
+jedną wartość. Gate może być `blocked_external`, ale całe wydanie pozostaje
+`NO_GO`, jeśli istnieją również niewykonane lub nieudane P0 zależne od projektu.
+
+## Kanoniczny runtime gate
+
+Launch 1.0 używa:
+
+```bash
+cd fitaly
+npm run e2e:core-release-gate
+```
+
+Nie używaj jako dowodu core readiness:
+
+```text
+npm run e2e
+npm run e2e:release-gate
+npm run e2e:full-review
+```
+
+Obecny broad `release-gate` i `full-review` obejmują zawieszone powierzchnie 1.1,
+m.in. Smart Memory, Recipe Catalog, Known Patterns, Planning, Home Next Action i
+Food Library autocomplete. Mogą służyć do diagnostyki, ale nie definiują zakresu
+Launch 1.0.
 
 ## Dokumenty
 
@@ -44,6 +68,8 @@ BLOCKED_EXTERNAL_DEPENDENCY
 - Nie zapisuj sekretów ani danych użytkownika w evidence.
 - P0 zamyka release. P1 można waive'ować tylko jawnie. P2 trafia po release.
 - Nowe domeny pozostają production-off przez cały launch pass.
+- Realny sandbox/provider smoke waliduje integrację; nie zastępuje testów
+  deterministycznych ani emulatorowych.
 
 ## Źródła prawdy
 

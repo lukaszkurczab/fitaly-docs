@@ -1,6 +1,7 @@
 # 02 — Release Readiness Gates
 
 Status: active contract
+Last reconciled: 2026-06-25
 
 ## Status vocabulary
 
@@ -12,7 +13,20 @@ Status: active contract
 - `passed`
 - `waived_p1`
 
-P0 nie może mieć statusu `waived_p1`.
+P0 nie może mieć statusu `waived_p1`. Globalna decyzja ma jedną wartość:
+`CORE_RC_READY`, `NO_GO` albo `BLOCKED_EXTERNAL_DEPENDENCY`.
+
+## Gate 0 — Dokumentacja i scope integrity
+
+Acceptance:
+
+- `launch/00-release-scope.md` ma jawne `IN`/`OUT` bez warunkowych decyzji;
+- `launch/01-current-release-status.md` jest jedynym aktywnym snapshotem;
+- brak aktywnych linków do usuniętych dokumentów;
+- historia 1.1 występuje tylko jako nota zawieszenia, nie backlog;
+- `npm run e2e:core-release-gate` jest jedynym kanonicznym runtime gate'em core;
+- broad `release-gate` i `full-review` nie są przedstawiane jako dowód Launch 1.0;
+- link review i `git diff --check` przechodzą.
 
 ## Gate A — Source integrity i exact pair
 
@@ -31,12 +45,13 @@ Acceptance:
 Acceptance:
 
 - production/smoke API URLs są prawidłowe;
-- telemetry, reminders, billing i AI mają jawne ustawienia;
+- telemetry, reminders, weekly reports, billing i AI mają jawne ustawienia;
 - wszystkie domeny 1.1 są `false` w production;
 - backend disabled route zwraca przewidywalny kod;
 - mobile nie wykonuje requestów/background work dla disabled feature;
 - deep link/navigation nie omija flag;
-- kill switch nie uruchamia legacy fallbacku.
+- kill switch nie uruchamia legacy fallbacku;
+- config snapshot lub hash jest zapisany w release evidence.
 
 ## Gate C — Mobile static/unit/contract
 
@@ -75,36 +90,55 @@ meal persistence/outbox oraz każdej launchowej ścieżki używającej Firestore
 
 ## Gate E — iOS core runtime
 
+Kanoniczna suite:
+
+```bash
+cd fitaly
+npm run e2e:core-release-gate
+```
+
 Acceptance:
 
 - RC build/profile odpowiada launch-like config;
 - jedna pełna green suite dla aktualnej pary SHA;
 - auth, onboarding, Add Meal, Review/save, Home/History/Stats, AI Chat, offline,
-  premium/restore, notifications, share i account operations zgodnie z
-  rzeczywistym scope;
+  premium/restore, notifications, Weekly Reports boundary, share i account
+  operations zgodnie ze scope;
 - brak E2E-only bypassu w production path;
-- artifact manifest, JUnit, logs i screenshoty.
+- artifact manifest, JUnit/reports, logs i screenshoty;
+- manifest lub companion evidence zawiera FE SHA, BE SHA, platformę, profil,
+  backend target, locale i feature flags.
 
 ## Gate F — Android core runtime
+
+Preflight:
+
+```bash
+cd fitaly
+npm run e2e:android-simulator:preflight
+```
+
+Po gotowym AVD uruchom tę samą kanoniczną suite core z Android runtime.
 
 Acceptance:
 
 - skonfigurowany i booted AVD;
-- `npm run e2e:android-simulator:preflight` zwraca ready;
-- pełna aktualna core suite lub jawnie równoważny Android release gate;
+- preflight zwraca ready;
+- pełna aktualna `core-release-gate` lub jawnie równoważny Android gate;
 - zweryfikowane layout, permissions, back navigation, keyboard, camera/media,
   notifications i billing platform behavior;
-- artifact manifest, JUnit, logs i screenshoty.
+- artifact manifest, reports, logs i screenshoty z pełną tożsamością RC.
 
 ## Gate G — Visual/UI readiness
 
 Acceptance:
 
 - katalog ekranów i stanów jest kompletny;
-- screenshot library obejmuje iOS i Android oraz wspierane języki;
+- screenshot library obejmuje iOS i Android oraz PL/EN;
 - każdy screen ma ocenę functional, visual, copy, accessibility i risk;
 - wszystkie P0/P1 release-blocking findings naprawione i ponownie sfotografowane;
-- brak mockowego copy, placeholderów, debug bannerów i zablokowanych CTA.
+- brak mockowego copy, placeholderów, debug bannerów i zablokowanych CTA;
+- raw visual bundle oraz review records wskazują ten sam RC.
 
 ## Gate H — Security/privacy/compliance
 
@@ -121,26 +155,35 @@ Acceptance:
 
 ## Gate I — Billing/premium
 
-Acceptance:
+Acceptance wymaga dwóch warstw:
+
+1. deterministycznych unit/integration/Maestro tests;
+2. realnego sandbox purchase i restore na iOS oraz Androidzie.
+
+Dodatkowo:
 
 - prawidłowe products/offerings/entitlement;
-- sandbox purchase i restore na obu platformach;
 - backend/mobile entitlement consistency;
 - free/premium limits;
 - expired/cancelled/offline/degraded states;
-- brak utraty zakupionego dostępu po restart/login/restore.
+- brak utraty zakupionego dostępu po restart/login/restore;
+- brak receiptów, transaction IDs i danych płatniczych w evidence.
+
+Mock/provider-fake nie zastępuje StoreKit/Play Billing sandbox.
 
 ## Gate J — Backend smoke i deployed evidence
 
 Acceptance:
 
-- health i version;
+- `GET /api/v1/health` i `GET /api/v1/version`;
 - deployed BE SHA zgodny z evidence;
 - auth flow contracts;
-- Add Meal AI i Chat v2 bounded smoke, jeśli zaplanowane;
-- credits, telemetry, export/delete i weekly premium boundary;
+- AI credits, telemetry, export/delete i Weekly Reports premium boundary;
+- ponieważ Add Meal AI i AI Chat są w scope: wymagany bounded smoke realnego
+  OpenAI wiring, maksymalnie 1 Chat text oraz 1 Add Meal text/photo call;
 - 1.1 routes pozostają disabled;
-- brak sekretów/raw payloadów w artifacts.
+- brak sekretów, raw promptów, odpowiedzi, obrazów lub auth payloadów w artifacts;
+- rollback target i monitoring są gotowe.
 
 ## Gate K — Backup/restore
 
@@ -172,4 +215,5 @@ Acceptance:
 - poprzedni stabilny mobile/backend artifact zidentyfikowany;
 - alerting i incident channel gotowe;
 - final template kompletny;
+- niezależny review nie znajduje nierozwiązanych P0;
 - release owner podpisuje `CORE_RC_READY`.

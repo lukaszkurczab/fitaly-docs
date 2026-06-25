@@ -19,7 +19,8 @@ Fitaly jest w trybie **Launch 1.0 Release Hardening**.
 - domeny 1.1 mogą pozostać w kodzie tylko za bezpiecznymi flagami `false` w
   produkcji;
 - projekt nie jest release-ready, dopóki release owner nie zamknie wszystkich
-  wymaganych gate'ów i nie podpisze decyzji `CORE_RC_READY`.
+  wymaganych gate'ów i nie podpisze decyzji `CORE_RC_READY`;
+- bieżąca decyzja pozostaje `NO_GO` do czasu zamknięcia wszystkich P0.
 
 Aktywny punkt wejścia:
 
@@ -30,7 +31,7 @@ Aktywny punkt wejścia:
 
 ## Szybki pakiet orientacyjny
 
-- [Kierunek rozwoju aplikacji](./app-development.md)
+- [Release scope](./launch/00-release-scope.md)
 - [Decyzje techniczne i guardraile](./architecture/decisions.md)
 - [Stack technologiczny](./stack.md)
 - [Architektura frontend](./architecture/frontend.md)
@@ -41,6 +42,16 @@ Aktywny punkt wejścia:
 - [Launch runbook](./runbooks/launch.md)
 - [Nota zawieszenia 1.1](./archive/2026-06-1-1-suspended.md)
 
+## Kanoniczna suite runtime Launch 1.0
+
+```bash
+cd fitaly
+npm run e2e:core-release-gate
+```
+
+`npm run e2e` jest obecnie aliasem do szerokiego `release-gate`, który obejmuje
+zawieszone domeny 1.1. Nie używaj go jako dowodu gotowości core release.
+
 ## Zasady pracy z dokumentacją
 
 - Najpierw sprawdź aktualny branch, SHA, kod, manifesty, README, AGENTS, skrypty
@@ -50,8 +61,8 @@ Aktywny punkt wejścia:
   `release-approved` to różne stany.
 - Artefakt bez dokładnego FE SHA, BE SHA, platformy, profilu runtime i daty nie
   jest release evidence.
-- Mock, emulator i provider-fake nie zastępują zaplanowanego smoke na realnej
-  integracji; realny smoke nie zastępuje testów deterministycznych.
+- Mock, emulator i provider-fake nie zastępują wymaganego bounded smoke na
+  realnej integracji; realny smoke nie zastępuje testów deterministycznych.
 - Disabled/degraded state musi być jawny. Kill switch nie może wracać do starej
   architektury po cichu.
 - Historycznych planów Smart Memory nie traktuj jako aktywnego backlogu.

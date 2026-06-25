@@ -1,6 +1,7 @@
 # 04 — Biblioteka artefaktów Maestro
 
 Status: required launch evidence
+Last reconciled with current runner: 2026-06-25
 
 ## Cel
 
@@ -8,116 +9,141 @@ Zbudować kompletną, przeglądalną bibliotekę ekranów i flow dla aktualnego 
 Nie wystarczy wynik `20/20`; release owner musi widzieć rzeczywisty produkt i
 ocenić gotowość każdego launchowego surface'u.
 
-## Źródła prawdy
+## Kanoniczne źródła
 
 - `fitaly/package.json`;
 - `fitaly/scripts/e2e/suites.json`;
 - `fitaly/scripts/e2e/run-suite.mjs`;
 - `fitaly/scripts/run-e2e-local.sh`;
+- `fitaly/scripts/e2e/run-visual-suite.mjs`;
+- `npm run e2e:core-release-gate`;
 - `npm run e2e:visual-audit`;
 - targeted suites dla auth, add-meal, home/history/statistics, AI chat,
   premium/billing, notifications, share i platform layout.
 
-## Wymagany model artefaktu
+Broad `release-gate` oraz `full-review` obejmują 1.1 i nie są kanoniczną
+biblioteką Launch 1.0.
 
-Każdy run ma:
+## Aktualny surowy output runnera
+
+Obecny `run-visual-suite.mjs` zapisuje:
 
 ```text
-<rc-id>/<platform>/<suite>/<run-id>/
-  manifest.md
-  junit/
+fitaly/e2e/artifacts/visual-audit/<run-id>/
+  manifest.json
+  reports/
   logs/
   screenshots/
-  optional-video/
 ```
 
-Raw bundle może pozostać jako CI/EAS artifact lub zewnętrzny, kontrolowany ZIP.
-W repo dokumentacji przechowuj indeks, oceny i wybrane, zredagowane screenshoty,
-nie nieograniczone logi/wideo.
+oraz aktualizuje:
 
-## Minimalne metadane
+```text
+fitaly/e2e/artifacts/visual-audit/latest
+```
 
-- RC id;
-- FE SHA;
-- BE SHA;
-- deployed/local backend target;
-- platform, OS i device profile;
-- build profile;
+Aktualny `manifest.json` obejmuje m.in. suite, run id, start/finish, platformę,
+listę flow, ścieżki outputu, expected screenshots, faktyczne screenshoty,
+reports, status, exit code i signal.
+
+To jest poprawny raw bundle, ale sam w sobie nie spełnia jeszcze pełnego
+kontraktu release evidence.
+
+## Brakujące pola tożsamości RC
+
+Przed zamknięciem visual gate wymagane są:
+
+- `candidateId`;
+- FE branch i pełny FE SHA;
+- BE branch i pełny BE SHA;
+- platforma oraz simulator/AVD/device model;
+- build profile i app version/build number;
+- backend environment/base URL label oraz deployed BE SHA;
 - locale;
-- suite i flow;
-- start/end time;
-- result i failed step;
-- feature flag snapshot;
-- artifact locations;
-- redaction status.
+- niesekretny snapshot krytycznych feature flags;
+- data/godzina;
+- suite i flow list;
+- wynik, failures i znane ograniczenia.
 
-Użyj [template manifestu](./templates/maestro-run-manifest.md).
+## Dopuszczalne rozwiązania
 
-## Screen capture contract
+Wybierz jedno i stosuj konsekwentnie:
 
-Screenshot rób:
+### A. Rozszerzenie `manifest.json`
 
-1. po wejściu na ekran;
-2. dla głównego ready state;
-3. dla kluczowej akcji przed/po;
-4. dla loading, empty, error, offline i permission state, jeśli istnieją;
-5. dla paywall/free/premium states;
-6. po zmianie layoutu lub naprawie findingu.
+Runner automatycznie dodaje brakujące pola z env/git/runtime i failuje, jeśli
+wymaganej tożsamości RC nie da się ustalić.
 
-Nazewnictwo:
+### B. Companion Maestro run manifest
+
+Raw `manifest.json` pozostaje bez zmian, a obok bundle albo w repo dokumentacji
+powstaje plik utworzony z `launch/templates/maestro-run-manifest.md`, który:
+
+- wskazuje ścieżkę/hash raw manifestu;
+- dodaje brakującą tożsamość RC;
+- zawiera review status i podpis ownera.
+
+Nie wolno ręcznie przepisywać wyniku bez wskazania raw bundle.
+
+## Docelowy model evidence
+
+Surowe artefakty pozostają w repo mobile, CI/EAS artifact albo kontrolowanym ZIP.
+Repo dokumentacji przechowuje indeks, review records i tylko wybrane,
+zredagowane screenshoty:
 
 ```text
-<order>__<surface>__<state>__<locale>__<platform>.png
+launch/evidence/<candidate-id>/
+  README.md
+  ios/
+    visual-audit-manifest.md
+    core-release-gate-manifest.md
+  android/
+    visual-audit-manifest.md
+    core-release-gate-manifest.md
+  screen-audit/
+  findings.md
 ```
 
-Przykład:
+## Wymagane powierzchnie
 
-```text
-030__review-meal__ai-result-ready__pl__ios.png
-```
+Co najmniej:
 
-## Completeness matrix
+- auth entry, login, register, reset i validation;
+- onboarding/profile completion;
+- Home empty i populated;
+- Add Meal options, manual, text, photo, barcode i saved template;
+- Review, edit, save i error states;
+- History, Details, edit/delete;
+- Statistics empty i populated;
+- AI Chat consent, empty, history, no credits i error;
+- paywall, purchase/restore/degraded;
+- notification preferences i permission states;
+- Weekly Reports entry/open/unavailable/premium boundary;
+- Share Quick/Customize/save/share/error/no-photo;
+- Settings, export, account delete/cancel;
+- offline, pending, failed, retry i conflict;
+- small-screen, keyboard i dark-mode paths rzeczywiście wspierane przez app.
 
-Biblioteka musi objąć co najmniej:
+Domeny 1.1 production-off nie są częścią wymaganej biblioteki Launch 1.0.
+Mogą mieć osobne diagnostyczne artefakty, ale nie zwiększają completeness core.
 
-- startup/splash/update state;
-- auth i session restore;
-- onboarding/profile;
-- Home;
-- Add Meal methods;
-- photo/text/manual/barcode zgodnie z launch scope;
-- Review/edit/save/error;
-- offline pending/failure/retry;
-- History/Meal Details/Statistics;
-- AI Chat;
-- notifications/reminders;
-- weekly report, jeśli aktywny;
-- paywall/purchase/restore/premium state;
-- Share;
-- Profile/Settings;
-- export/delete/logout;
-- permissions;
-- generic loading/empty/error/degraded states;
-- disabled 1.1 entrypoints lub potwierdzenie ich braku.
+## Screenshot quality
 
-## Quality rules
+Każdy screenshot musi:
 
-- Nie używaj production user data.
-- Nie zapisuj tokenów, emaili, raw promptów, zdjęć prywatnych ani receiptów.
-- Screenshot z debug overlay, test fixture bannerem lub niesanitowanym system
-  alertem nie jest store-quality evidence.
-- Jeżeli flow przechodzi, ale screenshot ujawnia błąd wizualny, wynik UI gate
-  pozostaje failed/partial.
-- Po naprawie zachowaj tylko aktualny accepted screenshot w indeksie; poprzedni
-  może zostać w raw bundle jako repair evidence.
+- pochodzić z bieżącego RC;
+- mieć stabilną, opisową nazwę;
+- nie zawierać tokenów, maili, raw AI content, receiptów ani PII;
+- pokazywać cały stan potrzebny do oceny;
+- zostać powiązany z flow, platformą i locale;
+- być ponowiony po naprawie P0/P1.
 
-## Output
+## Acceptance
 
-Dla każdego RC powstają:
-
-- manifest runów;
-- screen inventory;
-- screen audit records;
-- lista brakujących states;
-- lista P0/P1/P2 findings;
-- accepted screenshot set dla iOS i Androida.
+- raw bundle jest kompletny i powtarzalny;
+- identity manifest wskazuje dokładną parę FE/BE i runtime;
+- expected screenshots zgadzają się z outputem albo każdy brak jest wyjaśniony;
+- iOS i Android mają osobne evidence;
+- PL i EN mają wymagane pokrycie;
+- screen audit został wykonany;
+- wszystkie P0/P1 visual findings są zamknięte i re-fotografowane.

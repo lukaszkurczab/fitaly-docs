@@ -2,66 +2,84 @@
 
 Status dokumentu: active snapshot
 Snapshot date: 2026-06-25
-Decision: `BLOCKED_EXTERNAL_DEPENDENCY` / `NO_GO` do zamknięcia P0
+Decision: `NO_GO`
 
-## Ważne
+## Znaczenie decyzji
 
-To nie jest trwały raport historyczny. Aktualizuj go po każdym zamkniętym
-packecie. Nie kopiuj wyniku z wcześniejszego SHA na nowy kandydat.
+Globalna decyzja ma dokładnie jedną wartość. Część gate'ów może być
+`blocked_external`, ale release pozostaje `NO_GO`, ponieważ istnieją również
+niewykonane P0 zależne od projektu: aktualny baseline, bieżące CI, runtime obu
+platform, visual acceptance, security, billing, smoke, backup/restore i store
+readiness.
 
-## Znany punkt wyjścia
+## Repo baseline widoczny z remote
 
-- historyczny lokalny iOS `core-release-gate` miał wynik `20/20` dla wcześniejszej
-  pary branchy;
-- Android simulator preflight wykazał brak skonfigurowanego AVD/booted emulatora;
-- nowe domeny 1.1 są skonfigurowane jako production-off;
-- istnieją static/unit/contract i część remote CI evidence;
-- nie ma kompletnego evidence dla aktualnej jednej pary FE/BE obejmującego obie
-  platformy, live RC, deployed SHA, billing, backup/restore, security/privacy i
-  store readiness.
+Poniższe wartości są punktem orientacyjnym, nie finalnym RC evidence:
 
-Wszystkie powyższe punkty wymagają ponownego potwierdzenia dla aktualnego RC.
+| Repo | Branch | Remote HEAD odczytany 2026-06-25 |
+| --- | --- | --- |
+| Mobile | `codex/smart-memory-core-loop-fe` | `59feb230b74914ef5a7963b05d2a19dd695edef4` |
+| Backend | `codex/smart-memory-core-loop-be` | `fe01fbaf92921271968e9d7bde329530b42513eb` |
+| Docs baseline przed reconciliation v2 | `main` | `773c3f65c18fcc6858f8bc775eb7539e7e41e185` |
+
+Nadal trzeba lokalnie potwierdzić:
+
+- `git fetch --prune`;
+- branch names;
+- `git rev-parse HEAD`;
+- clean worktrees;
+- brak diffu do origin;
+- czy powyższa para jest faktycznie wybieranym release candidate;
+- nowy docs SHA po zastosowaniu paczki.
+
+## Historyczne evidence, którego nie wolno przepisać na RC
+
+- wcześniejszy lokalny iOS `core-release-gate` miał wynik `20/20`;
+- wcześniejszy Android preflight wykazał brak AVD/booted emulatora;
+- istnieją wcześniejsze exact-pair CI oraz targeted 1.1 evidence;
+- nowe domeny są skonfigurowane jako production-off.
+
+Powyższe informacje pomagają ustawić kolejkę pracy, ale nie zamykają gate'ów dla
+nowego kandydata.
 
 ## Status gate'ów
 
 | Gate | Status | Release impact | Najbliższa akcja |
 | --- | --- | --- | --- |
-| Scope freeze 1.0 | done | chroni przed scope creep | utrzymać 1.1 off |
-| Exact FE/BE SHA baseline | unknown | blocking | zapisać aktualne branche, SHA, clean/sync |
-| Exact-pair remote CI | unknown | blocking | uruchomić oba workflowy dla tej samej pary |
-| Production flags 1.1 off | partial | blocking przy drift | sprawdzić EAS, backend env i runtime disabled behavior |
-| iOS core runtime | partial | blocking | rerun aktualnego RC i zebrać artefakty |
-| Android core runtime | blocking | blocking | utworzyć AVD, boot, preflight i core suite |
-| Maestro artifact library | partial | blocking dla visual acceptance | wygenerować pełny katalog ekranów/states |
-| UI/UX screen audit | unknown | blocking dla P0/P1 | ocenić screenshoty i wykonać repair loop |
-| Security/privacy/compliance | unknown | blocking | wykonać checklistę i testy negatywne |
-| Billing/premium | unknown | blocking | purchase + restore + entitlement na obu platformach |
-| Backend smoke/deployed SHA | unknown | blocking | potwierdzić health/version/flows na smoke |
-| Backup/restore | unknown | blocking | wykonać drill i zapisać evidence |
-| Store readiness | unknown | blocking | build/install/metadata/privacy/track sanity |
-| Rollback rehearsal | unknown | blocking | backend + flag/config rollback |
-| Final release evidence | blocking | blocking | wypełnić dopiero po gate'ach |
+| Dokumentacja i scope freeze | in_progress | blocking do reconciliation | zastosować v2 i uruchomić grep/link review |
+| Exact FE/BE SHA baseline | in_progress | blocking | potwierdzić lokalnie clean/sync i wybrać candidate id |
+| Exact-pair remote CI | not_started | blocking | uruchomić oba workflowy dla wybranej pary |
+| Production flags 1.1 off | in_progress | blocking przy drift | sprawdzić EAS, backend env i disabled runtime |
+| Mobile static/unit/contract | not_started | blocking | uruchomić pełny current-candidate gate |
+| Backend static/unit/emulator | not_started | blocking | uruchomić pełny current-candidate gate |
+| iOS core runtime | not_started | blocking | `e2e:core-release-gate` dla aktualnego RC |
+| Android core runtime | blocked | blocking | utworzyć AVD, preflight i core suite |
+| Maestro artifact library | in_progress | blocking dla visual acceptance | rozszerzyć identity manifest i wygenerować bibliotekę |
+| UI/UX screen audit | not_started | blocking dla P0/P1 | ocenić screenshoty i wykonać repair loop |
+| Security/privacy/compliance | not_started | blocking | checklista, testy negatywne, delete/export |
+| Billing/premium | not_started | blocking | realny purchase + restore na obu platformach |
+| Backend smoke/deployed SHA | not_started | blocking | health/version/contracts + bounded provider smoke |
+| Backup/restore | not_started | blocking | wykonać drill i zapisać evidence |
+| Store readiness | not_started | blocking | build/install/metadata/privacy/track sanity |
+| Rollback rehearsal | not_started | blocking | backend + flag/config rollback |
+| Final release evidence | blocked | blocking | wypełnić dopiero po gate'ach |
 
 ## Otwarte P0
 
-1. Odświeżenie exact SHA i clean/sync baseline.
-2. Current-pair remote CI.
-3. Android runtime.
+1. Zastosowanie reconciliation v2 i usunięcie martwych referencji.
+2. Aktualny exact SHA i clean/sync baseline.
+3. Current-pair remote CI.
 4. Pełne aktualne iOS runtime evidence.
-5. Biblioteka screenshotów i audyt wszystkich launchowych ekranów.
-6. Security/privacy oraz delete/export.
-7. Realny billing sandbox i restore.
-8. Smoke backend z deployed SHA.
-9. Backup/restore.
-10. Production build i store/internal-track sanity.
-11. Rollback rehearsal.
+5. Android runtime.
+6. Biblioteka screenshotów oraz audyt launchowych ekranów.
+7. Security/privacy, delete i export.
+8. Realny billing sandbox i restore na obu platformach.
+9. Smoke backend z deployed SHA i bounded OpenAI wiring.
+10. Backup/restore oraz rollback.
+11. Store candidate i instalacja z kanałów dystrybucji.
 
-## Jak aktualizować
+## Zasada aktualizacji
 
-Po każdym packecie:
-
-- zmień tylko odpowiedni wiersz;
-- wpisz exact SHA i link/ścieżkę do evidence w opisie packetu lub finalnym
-  release artifact;
-- nie używaj `done`, jeżeli dowód dotyczy wcześniejszego kandydata;
-- przy zewnętrznym blockerze użyj `blocked_external`, nie `done_with_gap`.
+Po każdym packetcie aktualizuj status tylko na podstawie artefaktu przypisanego
+do tej samej pary FE/BE SHA. Zmiana SHA, profilu runtime albo krytycznej
+konfiguracji unieważnia zależne evidence.
