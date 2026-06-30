@@ -142,6 +142,7 @@ Monitoruj co najmniej:
 - AI provider errors, latency, credits i koszt;
 - billing purchase/restore/entitlement errors;
 - notification i Weekly Reports failures;
+- Sentry issue/export report for frontend and backend error clusters;
 - delete/export failures;
 - backend 5xx, latency i saturation;
 - telemetry ingestion health;

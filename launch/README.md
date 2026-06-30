@@ -57,6 +57,7 @@ Launch 1.0.
 10. [Mobile build i store readiness](./09-mobile-build-and-store-readiness.md)
 11. [Szablon decyzji](./10-release-decision-template.md)
 12. [Kolejka pracy](./11-work-queue.md)
+13. [Raporty launch-hardening](./reports/README.md)
 
 ## Reguły wykonania
 

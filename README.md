@@ -40,6 +40,7 @@ Aktywny punkt wejścia:
 - [E2E/testing runbook](./runbooks/e2e-testing.md)
 - [Runtime config](./runbooks/runtime-config.md)
 - [Launch runbook](./runbooks/launch.md)
+- [Sentry error export report](./runbooks/sentry-error-report.md)
 - [Nota zawieszenia 1.1](./archive/2026-06-1-1-suspended.md)
 
 ## Kanoniczna suite runtime Launch 1.0
